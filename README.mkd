@@ -1,0 +1,10 @@
+# ruby-gumbo
+
+## Description
+
+`ruby-gumbo` is a ruby binding for the Gumbo HTML5 parser.
+
+## Contact
+
+If you have found a bug, have an idea or a question, email me at
+<khaelin@gmail.com>.
