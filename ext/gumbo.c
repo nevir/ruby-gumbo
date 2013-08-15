@@ -25,12 +25,14 @@ VALUE r_document_has_doctype(VALUE self);
 
 
 static VALUE r_bool_new(bool val);
+static VALUE r_sym_new(const char *str);
 static VALUE r_cstr_new(const char *str);
+static VALUE r_gumbo_node_type_to_symbol(GumboNodeType type);
 static VALUE r_gumbo_quirks_mode_to_symbol(GumboQuirksModeEnum mode);
-static VALUE r_gumbo_document_to_value(GumboDocument *document);
+static VALUE r_gumbo_node_to_value(GumboNode *node);
 
 static VALUE m_gumbo;
-static VALUE c_document, c_element;
+static VALUE c_node, c_document, c_element;
 
 
 void
@@ -38,21 +40,24 @@ Init_gumbo(void) {
     m_gumbo = rb_define_module("Gumbo");
     rb_define_module_function(m_gumbo, "parse", r_gumbo_parse, 1);
 
-    c_document = rb_define_class_under(m_gumbo, "Document", rb_cObject);
+    c_node = rb_define_class_under(m_gumbo, "Node", rb_cObject);
+    rb_define_attr(c_node, "type", 1, 0);
+
+    c_document = rb_define_class_under(m_gumbo, "Document", c_node);
     rb_define_attr(c_document, "name", 1, 0);
     rb_define_attr(c_document, "public_identifier", 1, 0);
     rb_define_attr(c_document, "system_identifier", 1, 0);
     rb_define_attr(c_document, "quirks_mode", 1, 0);
     rb_define_method(c_document, "has_doctype?", r_document_has_doctype, 0);
 
-    c_element = rb_define_class_under(m_gumbo, "Element", rb_cObject);
+    c_element = rb_define_class_under(m_gumbo, "Element", c_node);
 }
 
 VALUE
 r_gumbo_parse(VALUE module, VALUE input) {
     GumboOutput *output;
     GumboDocument *document;
-    VALUE r_document;
+    VALUE r_document, r_root;
     VALUE result;
 
     rb_check_type(input, T_STRING);
@@ -66,9 +71,9 @@ r_gumbo_parse(VALUE module, VALUE input) {
     if (!output)
         rb_raise(rb_eRuntimeError, "cannot parse input");
 
-    r_document = r_gumbo_document_to_value(&output->document->v.document);
+    r_document = r_gumbo_node_to_value(output->document);
 
-    result = rb_yield(r_document);
+    result = rb_yield_values(1, r_document);
 
     gumbo_destroy_output(&kGumboDefaultOptions, output);
     return result;
@@ -85,44 +90,81 @@ r_bool_new(bool val) {
 }
 
 static VALUE
+r_sym_new(const char *str) {
+    return ID2SYM(rb_intern(str));
+}
+
+static VALUE
 r_cstr_new(const char *str) {
     return str ? rb_str_new2(str) : Qnil;
 }
 
 static VALUE
-r_gumbo_quirks_mode_to_symbol(GumboQuirksModeEnum mode) {
-    switch (mode) {
-#define DEFINE_MODE(value_, sym_) \
-        case value_: \
-            return ID2SYM(rb_intern(#sym_))
-
-        DEFINE_MODE(GUMBO_DOCTYPE_NO_QUIRKS, no_quirks);
-        DEFINE_MODE(GUMBO_DOCTYPE_QUIRKS, quirks);
-        DEFINE_MODE(GUMBO_DOCTYPE_LIMITED_QUIRKS, limited_quirks);
-
-#undef DEFINE_MODE
-
+r_gumbo_node_type_to_symbol(GumboNodeType type) {
+    switch (type) {
+        case GUMBO_NODE_DOCUMENT:
+            return r_sym_new("document");
+        case GUMBO_NODE_ELEMENT:
+            return r_sym_new("element");
+        case GUMBO_NODE_TEXT:
+            return r_sym_new("text");
+        case GUMBO_NODE_CDATA:
+            return r_sym_new("cdata");
+        case GUMBO_NODE_COMMENT:
+            return r_sym_new("comment");
+        case GUMBO_NODE_WHITESPACE:
+            return r_sym_new("whitespace");
         default:
-            return Qnil;
+            rb_raise(rb_eArgError, "unknown node type %d", type);
     }
 }
 
 static VALUE
-r_gumbo_document_to_value(GumboDocument *document) {
-    VALUE r_document;
+r_gumbo_quirks_mode_to_symbol(GumboQuirksModeEnum mode) {
+    switch (mode) {
+        case GUMBO_DOCTYPE_NO_QUIRKS:
+            return r_sym_new("no_quirks");
+        case GUMBO_DOCTYPE_QUIRKS:
+            return r_sym_new("quirks");
+        case GUMBO_DOCTYPE_LIMITED_QUIRKS:
+            return r_sym_new("limited_quirks");
+        default:
+            rb_raise(rb_eArgError, "unknown quirks mode %d", mode);
+    }
+}
 
-    r_document = rb_class_new_instance(0, NULL, c_document);
+static VALUE
+r_gumbo_node_to_value(GumboNode *node) {
+    VALUE class;
+    VALUE r_node;
 
-    rb_iv_set(r_document, "@name",
-              r_cstr_new(document->name));
-    rb_iv_set(r_document, "@public_identifier",
-              r_cstr_new(document->public_identifier));
-    rb_iv_set(r_document, "@system_identifier",
-              r_cstr_new(document->system_identifier));
-    rb_iv_set(r_document, "@quirks_mode",
-              r_gumbo_quirks_mode_to_symbol(document->doc_type_quirks_mode));
-    rb_iv_set(r_document, "@has_doctype",
-              r_bool_new(document->has_doctype));
+    if (node->type == GUMBO_NODE_DOCUMENT) {
+        class = c_document;
+    } else if (node->type == GUMBO_NODE_ELEMENT) {
+        class = c_element;
+    } else {
+        rb_raise(rb_eArgError, "unknown node type %d", node->type);
+    }
 
-    return r_document;
+    r_node = rb_class_new_instance(0, NULL, class);
+    rb_iv_set(r_node, "@type", r_gumbo_node_type_to_symbol(node->type));
+
+    if (node->type == GUMBO_NODE_DOCUMENT) {
+        GumboDocument *document;
+
+        document = &node->v.document;
+
+        rb_iv_set(r_node, "@name",
+                  r_cstr_new(document->name));
+        rb_iv_set(r_node, "@public_identifier",
+                  r_cstr_new(document->public_identifier));
+        rb_iv_set(r_node, "@system_identifier",
+                  r_cstr_new(document->system_identifier));
+        rb_iv_set(r_node, "@quirks_mode",
+                  r_gumbo_quirks_mode_to_symbol(document->doc_type_quirks_mode));
+        rb_iv_set(r_node, "@has_doctype",
+                  r_bool_new(document->has_doctype));
+    }
+
+    return r_node;
 }
