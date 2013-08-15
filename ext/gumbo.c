@@ -33,6 +33,7 @@ static VALUE r_tainted_str_new(const char *str, long len);
 static VALUE r_cstr_new(const char *str);
 static VALUE r_tainted_cstr_new(const char *str);
 
+static VALUE r_gumbo_source_position_to_value(GumboSourcePosition position);
 static VALUE r_gumbo_node_type_to_symbol(GumboNodeType type);
 static VALUE r_gumbo_parse_flags_to_symbol_array(GumboParseFlags flags);
 static VALUE r_gumbo_quirks_mode_to_symbol(GumboQuirksModeEnum mode);
@@ -47,6 +48,7 @@ static VALUE m_gumbo;
 static VALUE c_node, c_document, c_element;
 static VALUE c_text, c_cdata, c_comment, c_whitespace;
 static VALUE c_attribute;
+static VALUE c_source_position;
 
 
 void
@@ -73,24 +75,30 @@ Init_gumbo(void) {
     rb_define_attr(c_element, "tag_namespace", 1, 0);
     rb_define_attr(c_element, "attributes", 1, 0);
     rb_define_attr(c_element, "children", 1, 0);
+    rb_define_attr(c_element, "start_pos", 1, 0);
+    rb_define_attr(c_element, "end_pos", 1, 0);
     rb_define_method(c_element, "attribute", r_element_attribute, 1);
     rb_define_method(c_element, "has_attribute?", r_element_has_attribute, 1);
 
     c_text = rb_define_class_under(m_gumbo, "Text", c_node);
     rb_define_attr(c_text, "text", 1, 0);
     rb_define_attr(c_text, "original_text", 1, 0);
+    rb_define_attr(c_text, "start_pos", 1, 0);
 
     c_cdata = rb_define_class_under(m_gumbo, "CData", c_node);
     rb_define_attr(c_cdata, "text", 1, 0);
     rb_define_attr(c_cdata, "original_text", 1, 0);
+    rb_define_attr(c_cdata, "start_pos", 1, 0);
 
     c_comment = rb_define_class_under(m_gumbo, "Comment", c_node);
     rb_define_attr(c_comment, "text", 1, 0);
     rb_define_attr(c_comment, "original_text", 1, 0);
+    rb_define_attr(c_comment, "start_pos", 1, 0);
 
     c_whitespace = rb_define_class_under(m_gumbo, "Whitespace", c_node);
     rb_define_attr(c_whitespace, "text", 1, 0);
     rb_define_attr(c_whitespace, "original_text", 1, 0);
+    rb_define_attr(c_whitespace, "start_pos", 1, 0);
 
     c_attribute = rb_define_class_under(m_gumbo, "Attribute", rb_cObject);
     rb_define_attr(c_attribute, "namespace", 1, 0);
@@ -98,6 +106,16 @@ Init_gumbo(void) {
     rb_define_attr(c_attribute, "original_name", 1, 0);
     rb_define_attr(c_attribute, "value", 1, 0);
     rb_define_attr(c_attribute, "original_value", 1, 0);
+    rb_define_attr(c_attribute, "name_start", 1, 0);
+    rb_define_attr(c_attribute, "name_end", 1, 0);
+    rb_define_attr(c_attribute, "value_start", 1, 0);
+    rb_define_attr(c_attribute, "value_end", 1, 0);
+
+    c_source_position = rb_define_class_under(m_gumbo, "SourcePosition",
+                                              rb_cObject);
+    rb_define_attr(c_source_position, "line", 1, 0);
+    rb_define_attr(c_source_position, "column", 1, 0);
+    rb_define_attr(c_source_position, "offset", 1, 0);
 }
 
 VALUE
@@ -209,6 +227,19 @@ r_tainted_cstr_new(const char *str) {
     }
 
     return val;
+}
+
+static VALUE
+r_gumbo_source_position_to_value(GumboSourcePosition position) {
+    VALUE r_position;
+
+    r_position = rb_class_new_instance(0, NULL, c_source_position);
+
+    rb_iv_set(r_position, "@line", UINT2NUM(position.line));
+    rb_iv_set(r_position, "@column", UINT2NUM(position.column));
+    rb_iv_set(r_position, "@offset", UINT2NUM(position.offset));
+
+    return r_position;
 }
 
 static VALUE
@@ -652,6 +683,10 @@ r_gumbo_node_to_value(GumboNode *node) {
                                     element->original_tag.length));
         rb_iv_set(r_node, "@tag_namespace",
                   r_gumbo_namespace_to_symbol(element->tag_namespace));
+        rb_iv_set(r_node, "@start_pos",
+                  r_gumbo_source_position_to_value(element->start_pos));
+        rb_iv_set(r_node, "@end_pos",
+                  r_gumbo_source_position_to_value(element->end_pos));
 
         r_attributes = rb_ary_new2(element->attributes.length);
         rb_iv_set(r_node, "@attributes", r_attributes);
@@ -677,6 +712,8 @@ r_gumbo_node_to_value(GumboNode *node) {
         rb_iv_set(r_node, "@original_text",
                   r_tainted_str_new(text->original_text.data,
                                     text->original_text.length));
+        rb_iv_set(r_node, "@start_pos",
+                  r_gumbo_source_position_to_value(text->start_pos));
     }
 
     if (children) {
@@ -733,6 +770,14 @@ r_gumbo_attribute_to_value(GumboAttribute *attribute) {
     rb_iv_set(r_attribute, "@original_value",
               r_tainted_str_new(attribute->original_value.data,
                                 attribute->original_value.length));
+    rb_iv_set(r_attribute, "@name_start",
+              r_gumbo_source_position_to_value(attribute->name_start));
+    rb_iv_set(r_attribute, "@name_end",
+              r_gumbo_source_position_to_value(attribute->name_end));
+    rb_iv_set(r_attribute, "@value_start",
+              r_gumbo_source_position_to_value(attribute->value_start));
+    rb_iv_set(r_attribute, "@value_end",
+              r_gumbo_source_position_to_value(attribute->value_end));
 
     return r_attribute;
 }
