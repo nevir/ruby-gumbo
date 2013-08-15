@@ -679,7 +679,7 @@ r_gumbo_node_to_value(GumboNode *node) {
                                     text->original_text.length));
     }
 
-    if (children && children->length > 0) {
+    if (children) {
         VALUE r_children;
 
         r_children = rb_ary_new2(children->length);
