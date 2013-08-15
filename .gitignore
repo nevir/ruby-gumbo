@@ -1,0 +1,6 @@
+ext/*.o
+ext/*.so
+
+ext/Makefile
+ext/extconf.h
+ext/mkmf.log
