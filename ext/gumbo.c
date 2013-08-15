@@ -42,6 +42,7 @@ static VALUE r_gumbo_attribute_to_value(GumboAttribute *attribute);
 
 static VALUE m_gumbo;
 static VALUE c_node, c_document, c_element;
+static VALUE c_text, c_cdata, c_comment, c_whitespace;
 static VALUE c_attribute;
 
 
@@ -67,6 +68,22 @@ Init_gumbo(void) {
     rb_define_attr(c_element, "tag_namespace", 1, 0);
     rb_define_attr(c_element, "attributes", 1, 0);
     rb_define_attr(c_element, "children", 1, 0);
+
+    c_text = rb_define_class_under(m_gumbo, "Text", c_node);
+    rb_define_attr(c_text, "text", 1, 0);
+    rb_define_attr(c_text, "original_text", 1, 0);
+
+    c_cdata = rb_define_class_under(m_gumbo, "CData", c_node);
+    rb_define_attr(c_cdata, "text", 1, 0);
+    rb_define_attr(c_cdata, "original_text", 1, 0);
+
+    c_comment = rb_define_class_under(m_gumbo, "Comment", c_node);
+    rb_define_attr(c_comment, "text", 1, 0);
+    rb_define_attr(c_comment, "original_text", 1, 0);
+
+    c_whitespace = rb_define_class_under(m_gumbo, "Whitespace", c_node);
+    rb_define_attr(c_whitespace, "text", 1, 0);
+    rb_define_attr(c_whitespace, "original_text", 1, 0);
 
     c_attribute = rb_define_class_under(m_gumbo, "Attribute", rb_cObject);
     rb_define_attr(c_attribute, "namespace", 1, 0);
@@ -516,13 +533,22 @@ r_gumbo_node_to_value(GumboNode *node) {
         class = c_document;
     } else if (node->type == GUMBO_NODE_ELEMENT) {
         class = c_element;
+    } else if (node->type == GUMBO_NODE_TEXT) {
+        class = c_text;
+    } else if (node->type == GUMBO_NODE_CDATA) {
+        class = c_cdata;
+    } else if (node->type == GUMBO_NODE_COMMENT) {
+        class = c_comment;
+    } else if (node->type == GUMBO_NODE_WHITESPACE) {
+        class = c_whitespace;
     } else {
-        //rb_raise(rb_eArgError, "unknown node type %d", node->type);
-        return Qnil;
+        rb_raise(rb_eArgError, "unknown node type %d", node->type);
     }
 
     r_node = rb_class_new_instance(0, NULL, class);
     rb_iv_set(r_node, "@type", r_gumbo_node_type_to_symbol(node->type));
+
+    children = NULL;
 
     if (node->type == GUMBO_NODE_DOCUMENT) {
         GumboDocument *document;
@@ -565,6 +591,18 @@ r_gumbo_node_to_value(GumboNode *node) {
 
             rb_ary_store(r_attributes, i, r_attribute);
         }
+    } else if (node->type == GUMBO_NODE_TEXT
+            || node->type == GUMBO_NODE_CDATA
+            || node->type == GUMBO_NODE_COMMENT
+            || node->type == GUMBO_NODE_WHITESPACE) {
+        GumboText *text;
+
+        text = &node->v.text;
+
+        rb_iv_set(r_node, "@text", r_tainted_cstr_new(text->text));
+        rb_iv_set(r_node, "@original_text",
+                  r_tainted_str_new(text->original_text.data,
+                                    text->original_text.length));
     }
 
     if (children && children->length > 0) {
