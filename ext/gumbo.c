@@ -127,9 +127,6 @@ r_gumbo_parse(VALUE module, VALUE input) {
 
     rb_check_type(input, T_STRING);
 
-    if (!rb_block_given_p())
-        rb_raise(rb_eLocalJumpError, "no block given");
-
     output = gumbo_parse_with_options(&kGumboDefaultOptions,
                                       StringValueCStr(input),
                                       RSTRING_LEN(input));
@@ -138,7 +135,11 @@ r_gumbo_parse(VALUE module, VALUE input) {
 
     r_document = r_gumbo_node_to_value(output->document);
 
-    result = rb_yield_values(1, r_document);
+    if (rb_block_given_p()) {
+        result = rb_yield(r_document);
+    } else {
+        result = r_document;
+    }
 
     gumbo_destroy_output(&kGumboDefaultOptions, output);
     return result;
