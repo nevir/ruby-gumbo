@@ -34,6 +34,7 @@ static VALUE r_cstr_new(const char *str);
 static VALUE r_tainted_cstr_new(const char *str);
 
 static VALUE r_gumbo_node_type_to_symbol(GumboNodeType type);
+static VALUE r_gumbo_parse_flags_to_symbol_array(GumboParseFlags flags);
 static VALUE r_gumbo_quirks_mode_to_symbol(GumboQuirksModeEnum mode);
 static VALUE r_gumbo_namespace_to_symbol(GumboNamespaceEnum ns);
 static VALUE r_gumbo_tag_to_symbol(GumboTag tag);
@@ -55,6 +56,7 @@ Init_gumbo(void) {
 
     c_node = rb_define_class_under(m_gumbo, "Node", rb_cObject);
     rb_define_attr(c_node, "type", 1, 0);
+    rb_define_attr(c_node, "parse_flags", 1, 0);
 
     c_document = rb_define_class_under(m_gumbo, "Document", c_node);
     rb_define_attr(c_document, "name", 1, 0);
@@ -226,6 +228,38 @@ r_gumbo_node_type_to_symbol(GumboNodeType type) {
         default:
             rb_raise(rb_eArgError, "unknown node type %d", type);
     }
+}
+
+static VALUE
+r_gumbo_parse_flags_to_symbol_array(GumboParseFlags flags) {
+    VALUE array;
+
+    array = rb_ary_new();
+
+    if (flags & GUMBO_INSERTION_NORMAL)
+        rb_ary_push(array, r_sym_new("insertion_normal"));
+    if (flags & GUMBO_INSERTION_BY_PARSER)
+        rb_ary_push(array, r_sym_new("insertion_by_parser"));
+    if (flags & GUMBO_INSERTION_IMPLICIT_END_TAG)
+        rb_ary_push(array, r_sym_new("insertion_implicit_end_tag"));
+    if (flags & GUMBO_INSERTION_IMPLIED)
+        rb_ary_push(array, r_sym_new("insertion_implied"));
+    if (flags & GUMBO_INSERTION_CONVERTED_FROM_END_TAG)
+        rb_ary_push(array, r_sym_new("insertion_converted_from_end_tag"));
+    if (flags & GUMBO_INSERTION_FROM_ISINDEX)
+        rb_ary_push(array, r_sym_new("insertion_from_isindex"));
+    if (flags & GUMBO_INSERTION_FROM_IMAGE)
+        rb_ary_push(array, r_sym_new("insertion_from_image"));
+    if (flags & GUMBO_INSERTION_RECONSTRUCTED_FORMATTING_ELEMENT)
+        rb_ary_push(array, r_sym_new("insertion_reconstructed_formatting_element"));
+    if (flags & GUMBO_INSERTION_ADOPTION_AGENCY_CLONED)
+        rb_ary_push(array, r_sym_new("insertion_adoption_agency_cloned"));
+    if (flags & GUMBO_INSERTION_ADOPTION_AGENCY_MOVED)
+        rb_ary_push(array, r_sym_new("insertion_adoption_agency_moved"));
+    if (flags & GUMBO_INSERTION_FOSTER_PARENTED)
+        rb_ary_push(array, r_sym_new("insertion_foster_parented"));
+
+    return array;
 }
 
 static VALUE
@@ -583,6 +617,8 @@ r_gumbo_node_to_value(GumboNode *node) {
 
     r_node = rb_class_new_instance(0, NULL, class);
     rb_iv_set(r_node, "@type", r_gumbo_node_type_to_symbol(node->type));
+    rb_iv_set(r_node, "@parse_flags",
+              r_gumbo_parse_flags_to_symbol_array(node->parse_flags));
 
     children = NULL;
 
