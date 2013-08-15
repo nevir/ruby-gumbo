@@ -56,6 +56,7 @@ Init_gumbo(void) {
 
     c_node = rb_define_class_under(m_gumbo, "Node", rb_cObject);
     rb_define_attr(c_node, "type", 1, 0);
+    rb_define_attr(c_node, "parent", 1, 0);
     rb_define_attr(c_node, "parse_flags", 1, 0);
 
     c_document = rb_define_class_under(m_gumbo, "Document", c_node);
@@ -617,6 +618,7 @@ r_gumbo_node_to_value(GumboNode *node) {
 
     r_node = rb_class_new_instance(0, NULL, class);
     rb_iv_set(r_node, "@type", r_gumbo_node_type_to_symbol(node->type));
+    rb_iv_set(r_node, "@parent", Qnil);
     rb_iv_set(r_node, "@parse_flags",
               r_gumbo_parse_flags_to_symbol_array(node->parse_flags));
 
@@ -689,6 +691,8 @@ r_gumbo_node_to_value(GumboNode *node) {
 
             child = children->data[i];
             r_child = r_gumbo_node_to_value(child);
+
+            rb_iv_set(r_child, "@parent", r_node);
 
             rb_ary_store(r_children, i, r_child);
         }

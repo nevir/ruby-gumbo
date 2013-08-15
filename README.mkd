@@ -4,6 +4,11 @@
 
 `ruby-gumbo` is a ruby binding for the Gumbo HTML5 parser.
 
+## Installation
+
+Create the gem with `rake package`, then install it with `gem install` (the
+gem file is in the `pkg` directory.
+
 ## Contact
 
 If you have found a bug, have an idea or a question, email me at
