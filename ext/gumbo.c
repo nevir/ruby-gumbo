@@ -33,6 +33,8 @@ static VALUE r_tainted_str_new(const char *str, long len);
 static VALUE r_cstr_new(const char *str);
 static VALUE r_tainted_cstr_new(const char *str);
 
+static VALUE r_gumbo_destroy_output(VALUE value);
+
 static VALUE r_gumbo_source_position_to_value(GumboSourcePosition position);
 static VALUE r_gumbo_node_type_to_symbol(GumboNodeType type);
 static VALUE r_gumbo_parse_flags_to_symbol_array(GumboParseFlags flags);
@@ -141,7 +143,8 @@ r_gumbo_parse(VALUE module, VALUE input) {
     if (!output)
         rb_raise(rb_eRuntimeError, "cannot parse input");
 
-    r_document = r_gumbo_node_to_value(output->document);
+    r_document = rb_ensure(r_gumbo_node_to_value, (VALUE)output->document,
+                           r_gumbo_destroy_output, (VALUE)output);
 
     if (rb_block_given_p()) {
         result = rb_yield(r_document);
@@ -149,7 +152,6 @@ r_gumbo_parse(VALUE module, VALUE input) {
         result = r_document;
     }
 
-    gumbo_destroy_output(&kGumboDefaultOptions, output);
     return result;
 }
 
@@ -256,6 +258,16 @@ r_tainted_cstr_new(const char *str) {
     }
 
     return val;
+}
+
+static VALUE
+r_gumbo_destroy_output(VALUE value) {
+    GumboOutput *output;
+
+    output = (GumboOutput*)value;
+    gumbo_destroy_output(&kGumboDefaultOptions, output);
+
+    return Qnil;
 }
 
 static VALUE
