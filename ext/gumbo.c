@@ -22,6 +22,8 @@ void Init_gumbo(void);
 
 VALUE r_gumbo_parse(VALUE module, VALUE input);
 VALUE r_document_has_doctype(VALUE self);
+VALUE r_element_attribute(VALUE self, VALUE name);
+VALUE r_element_has_attribute(VALUE self, VALUE name);
 
 
 static VALUE r_bool_new(bool val);
@@ -68,6 +70,8 @@ Init_gumbo(void) {
     rb_define_attr(c_element, "tag_namespace", 1, 0);
     rb_define_attr(c_element, "attributes", 1, 0);
     rb_define_attr(c_element, "children", 1, 0);
+    rb_define_method(c_element, "attribute", r_element_attribute, 1);
+    rb_define_method(c_element, "has_attribute?", r_element_has_attribute, 1);
 
     c_text = rb_define_class_under(m_gumbo, "Text", c_node);
     rb_define_attr(c_text, "text", 1, 0);
@@ -122,6 +126,38 @@ r_gumbo_parse(VALUE module, VALUE input) {
 VALUE
 r_document_has_doctype(VALUE self) {
     return rb_iv_get(self, "@has_doctype");
+}
+
+VALUE
+r_element_attribute(VALUE self, VALUE name) {
+    VALUE attributes;
+    const char *name_str;
+
+    name_str = StringValueCStr(name);
+
+    attributes = rb_iv_get(self, "@attributes");
+    for (long i = 0; i < RARRAY_LEN(attributes); i++) {
+        VALUE attribute;
+        VALUE r_attr_name;
+        const char *attr_name;
+
+        attribute = rb_ary_entry(attributes, i);
+        r_attr_name = rb_iv_get(attribute, "@name");
+        attr_name = StringValueCStr(r_attr_name);
+
+        if (strcasecmp(attr_name, name_str) == 0)
+            return attribute;
+    }
+
+    return Qnil;
+}
+
+VALUE
+r_element_has_attribute(VALUE self, VALUE name) {
+    VALUE attribute;
+
+    attribute = r_element_attribute(self, name);
+    return (attribute == Qnil) ? Qfalse : Qtrue;
 }
 
 static VALUE
