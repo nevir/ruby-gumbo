@@ -118,6 +118,14 @@ Init_gumbo(void) {
     rb_define_attr(c_source_position, "offset", 1, 0);
 }
 
+/*
+ * call-seq:
+ *   Gumbo::parse(input) {|document| ...}
+ *   Gumbo::parse(input)                -> document
+ *
+ * Parse a HTML document from a string. If the document cannot be created, a
+ * runtime error is raised.
+ */
 VALUE
 r_gumbo_parse(VALUE module, VALUE input) {
     GumboOutput *output;
@@ -145,11 +153,24 @@ r_gumbo_parse(VALUE module, VALUE input) {
     return result;
 }
 
+/*
+ * call-seq:
+ *   document.has_doctype? -> boolean
+ *
+ * Return +true+ if the document has a doctype or +false+ else.
+ */
 VALUE
 r_document_has_doctype(VALUE self) {
     return rb_iv_get(self, "@has_doctype");
 }
 
+/*
+ * call-seq:
+ *   element.attribute(name) -> attribute
+ *
+ * If +element+ has an attribute with the name +name+, return it. If not,
+ * return +nil+.
+ */
 VALUE
 r_element_attribute(VALUE self, VALUE name) {
     VALUE attributes;
@@ -174,6 +195,13 @@ r_element_attribute(VALUE self, VALUE name) {
     return Qnil;
 }
 
+/*
+ * call-seq:
+ *   element.has_attribute?(name) -> boolean
+ *
+ * Return +true+ if +element+ has an attribute with the name +name+ or
+ * +false+ else.
+ */
 VALUE
 r_element_has_attribute(VALUE self, VALUE name) {
     VALUE attribute;

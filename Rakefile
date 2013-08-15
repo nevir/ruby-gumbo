@@ -1,7 +1,10 @@
 
-require "rake/clean"
+require 'rake/clean'
+
+require 'rdoc/task'
 
 require 'rubygems/package_task'
+
 
 PKG_NAME = "gumbo"
 PKG_VERSION = "1.0.0"
@@ -35,6 +38,22 @@ end
 
 desc "Build the native library"
 task :build => MODULE
+
+# Documentation
+RDOC_FILES = FileList["ext/gumbo.c"]
+
+Rake::RDocTask.new do |task|
+  #task.main = "README.rdoc"
+  task.rdoc_dir = "doc/api"
+  task.rdoc_files.include(RDOC_FILES)
+end
+
+Rake::RDocTask.new(:ri) do |task|
+  #task.main = "README.rdoc"
+  task.rdoc_dir = "doc/ri"
+  task.options << "--ri-system"
+  task.rdoc_files.include(RDOC_FILES)
+end
 
 # Packaging
 PKG_FILES = FileList["Rakefile", "LICENSE", "README.mkd",
