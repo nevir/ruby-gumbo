@@ -1,6 +1,8 @@
-ext/*.o
-ext/*.so
+/ext/*.o
+/ext/*.so
 
-ext/Makefile
-ext/extconf.h
-ext/mkmf.log
+/ext/Makefile
+/ext/extconf.h
+/ext/mkmf.log
+
+/pkg
