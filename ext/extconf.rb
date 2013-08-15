@@ -9,5 +9,7 @@ unless pkg_config("libgumbo")
   $libs << " -lgumbo"
 end
 
+$CFLAGS << " -std=c99"
+
 create_header
 create_makefile(extension_name)
