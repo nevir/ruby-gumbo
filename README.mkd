@@ -7,7 +7,7 @@
 ## Installation
 
 Create the gem with `rake package`, then install it with `gem install` (the
-gem file is in the `pkg` directory.
+gem file is in the `pkg` directory).
 
 ## Contact
 
