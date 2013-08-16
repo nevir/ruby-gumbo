@@ -140,6 +140,9 @@ r_gumbo_parse(VALUE module, VALUE input) {
 
     rb_check_type(input, T_STRING);
 
+    if (rb_enc_get_index(input) != rb_utf8_encindex())
+        rb_raise(rb_eArgError, "input is not UTF-8 encoded");
+
     output = gumbo_parse_with_options(&kGumboDefaultOptions,
                                       StringValueCStr(input),
                                       RSTRING_LEN(input));
