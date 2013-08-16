@@ -15,6 +15,7 @@
  */
 
 #include <ruby.h>
+#include <ruby/encoding.h>
 
 #include <gumbo.h>
 
@@ -127,6 +128,8 @@ Init_gumbo(void) {
  *
  * Parse a HTML document from a string. If the document cannot be created, a
  * runtime error is raised.
+ *
+ * The input string must be UTF-8 encoded.
  */
 VALUE
 r_gumbo_parse(VALUE module, VALUE input) {
@@ -224,7 +227,7 @@ r_sym_new(const char *str) {
 
 static VALUE
 r_str_new(const char *str, long len) {
-    return str ? rb_str_new(str, len) : Qnil;
+    return str ? rb_enc_str_new(str, len, rb_utf8_encoding()) : Qnil;
 }
 
 static VALUE
@@ -232,7 +235,7 @@ r_tainted_str_new(const char *str, long len) {
     VALUE val;
 
     if (str) {
-        val = rb_str_new(str, len);
+        val = rb_enc_str_new(str, len, rb_utf8_encoding());
         OBJ_TAINT(str);
     } else {
         val = Qnil;
@@ -243,21 +246,12 @@ r_tainted_str_new(const char *str, long len) {
 
 static VALUE
 r_cstr_new(const char *str) {
-    return str ? rb_str_new2(str) : Qnil;
+    return r_str_new(str, strlen(str));
 }
 
 static VALUE
 r_tainted_cstr_new(const char *str) {
-    VALUE val;
-
-    if (str) {
-        val = rb_str_new2(str);
-        OBJ_TAINT(str);
-    } else {
-        val = Qnil;
-    }
-
-    return val;
+    return r_tainted_str_new(str, strlen(str));
 }
 
 static VALUE
