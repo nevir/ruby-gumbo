@@ -40,7 +40,7 @@ desc "Build the native library"
 task :build => MODULE
 
 # Documentation
-RDOC_FILES = FileList["ext/gumbo.c"]
+RDOC_FILES = FileList["ext/gumbo.c", "lib/gumbo/extra.rb"]
 
 Rake::RDocTask.new do |task|
   #task.main = "README.rdoc"
@@ -57,7 +57,7 @@ end
 
 # Packaging
 PKG_FILES = FileList["Rakefile", "LICENSE", "README.mkd",
-                     "lib/**/*.rb",
+                     "lib/gumbo/*.rb",
                      "ext/extconf.rb", "ext/*.[hc]"]
 
 SPEC = Gem::Specification.new do |spec|
