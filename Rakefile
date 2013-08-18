@@ -6,8 +6,8 @@ require 'rdoc/task'
 require 'rubygems/package_task'
 
 
-PKG_NAME = "gumbo"
-PKG_VERSION = "1.0.0"
+PKG_NAME = "ruby-gumbo"
+PKG_VERSION = "1.0.1"
 
 EXT_CONF = "ext/extconf.rb"
 MAKEFILE = "ext/Makefile"
