@@ -6,8 +6,12 @@
 
 ## Installation
 
-Create the gem with `rake package`, then install it with `gem install` (the
-gem file is in the `pkg` directory).
+`ruby-gumbo` can be directly installed from http://rubygems.org:
+
+    gem install ruby-gumbo
+
+Or you can create the gem with `rake package`, then install it with `gem
+install` (the gem file is in the `pkg` directory).
 
 ## Contact
 
