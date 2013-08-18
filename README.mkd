@@ -13,6 +13,35 @@
 Or you can create the gem with `rake package`, then install it with `gem
 install` (the gem file is in the `pkg` directory).
 
+## Example
+
+```ruby
+require 'net/http'
+
+html = Net::HTTP.get URI.parse('http://example.org')
+Gumbo::parse(html) {|doc| doc.dump_tree}
+```
+
+Result:
+
+```
+<HTML>
+  <HEAD>
+    <TITLE>
+    <META charset>
+    <META http-equiv content>
+    <META name content>
+    <STYLE type>
+  <BODY>
+    <DIV>
+      <H1>
+      <P>
+      <P>
+        <A href>
+```
+
+You can find more examples in the `examples` directory.
+
 ## Contact
 
 If you have found a bug, have an idea or a question, email me at
