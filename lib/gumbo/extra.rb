@@ -26,7 +26,7 @@ module Gumbo
         output.write (" " * indent)
 
         if node.type == :element
-          tag = (node.tag == :unknown) ? node.original_tag : node.tag.to_s
+          tag = (node.tag == :unknown) ? node.original_tag_name : node.tag.to_s
           attributes = node.attributes.map(&:name)
           output.write "<" + tag.upcase()
           output.write(" " + attributes.join(" ")) unless attributes.empty?
