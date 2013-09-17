@@ -75,6 +75,7 @@ Init_gumbo(void) {
     c_element = rb_define_class_under(m_gumbo, "Element", c_node);
     rb_define_attr(c_element, "tag", 1, 0);
     rb_define_attr(c_element, "original_tag", 1, 0);
+    rb_define_attr(c_element, "original_tag_name", 1, 0);
     rb_define_attr(c_element, "tag_namespace", 1, 0);
     rb_define_attr(c_element, "attributes", 1, 0);
     rb_define_attr(c_element, "children", 1, 0);
@@ -430,6 +431,10 @@ r_gumbo_node_to_value(GumboNode *node) {
         rb_iv_set(r_node, "@tag",
                   r_gumbo_tag_to_symbol(element->tag));
         rb_iv_set(r_node, "@original_tag",
+                  r_tainted_str_new(element->original_tag.data,
+                                    element->original_tag.length));
+        gumbo_tag_from_original_text(&element->original_tag);
+        rb_iv_set(r_node, "@original_tag_name",
                   r_tainted_str_new(element->original_tag.data,
                                     element->original_tag.length));
         rb_iv_set(r_node, "@tag_namespace",
