@@ -7,7 +7,7 @@ require 'rubygems/package_task'
 
 
 PKG_NAME = "ruby-gumbo"
-PKG_VERSION = "1.0.1"
+PKG_VERSION = "1.0.2"
 
 EXT_CONF = "ext/extconf.rb"
 MAKEFILE = "ext/Makefile"
