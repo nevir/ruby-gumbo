@@ -14,7 +14,7 @@ MAKEFILE = "ext/Makefile"
 MODULE = "ext/gumbo.so"
 SRC = Dir.glob("ext/*.c") << MAKEFILE
 
-CLEAN.include [MODULE, "ext/*.o"]
+CLEAN.include [MODULE, "ext/*.o", "ext/tmp", "ports"]
 CLOBBER.include ["ext/mkmf.log", "ext/extconf.h", MAKEFILE]
 
 # Build
@@ -36,8 +36,17 @@ file MODULE => SRC do |t|
   end
 end
 
+desc "Check for dependencies"
+task :check do
+  begin
+    require "mini_portile"
+  rescue LoadError
+    abort "mini_portile is missing: gem install mini_portile"
+  end
+end
+
 desc "Build the native library"
-task :build => MODULE
+task :build => [:check, MODULE]
 
 # Documentation
 RDOC_FILES = FileList["ext/gumbo.c", "lib/gumbo/extra.rb"]
@@ -72,6 +81,8 @@ SPEC = Gem::Specification.new do |spec|
     spec.extensions = "ext/extconf.rb"
 
     spec.required_ruby_version = ">= 1.9.3"
+
+    spec.add_runtime_dependency 'mini_portile', '~> 0.6'
 end
 
 Gem::PackageTask.new(SPEC) do |pkg|

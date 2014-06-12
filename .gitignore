@@ -1,10 +1,13 @@
+/ext/*.bundle
 /ext/*.o
 /ext/*.so
+/ext/tmp/
 
 /ext/Makefile
 /ext/extconf.h
 /ext/mkmf.log
 
 /pkg
+/ports
 
 session.vim
