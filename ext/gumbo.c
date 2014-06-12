@@ -55,7 +55,7 @@ static VALUE c_source_position;
 
 
 void
-Init_gumbo(void) {
+Init_gumbo_ext(void) {
     m_gumbo = rb_define_module("Gumbo");
     rb_define_module_function(m_gumbo, "parse", r_gumbo_parse, 1);
 

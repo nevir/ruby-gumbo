@@ -1,4 +1,3 @@
-
 # Copyright (c) 2013 Nicolas Martyanoff
 #
 # Permission to use, copy, modify, and distribute this software for any
