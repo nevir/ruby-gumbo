@@ -1,6 +1,6 @@
 require "mkmf"
 
-EXTENSION_NAME = "gumbo"
+EXTENSION_NAME = "gumbo_ext"
 USE_SYSTEM_LIBS = arg_config('--use-system-libraries', ENV['RUBY_GUMBO_USE_SYSTEM_LIBRARIES'])
 LIBGUMBO_PACKAGE = "https://github.com/google/gumbo-parser/archive/3a61e9ad963cacfb3246468feab28c5058f621c1.zip"
 LIBGUMBO_PACKAGE_VERSION = "1.0-2014-05-03-3a61e9"

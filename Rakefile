@@ -66,7 +66,7 @@ end
 
 # Packaging
 PKG_FILES = FileList["Rakefile", "LICENSE", "README.mkd",
-                     "lib/gumbo/*.rb",
+                     "lib/**/*.rb",
                      "ext/extconf.rb", "ext/*.[hc]"]
 
 SPEC = Gem::Specification.new do |spec|
