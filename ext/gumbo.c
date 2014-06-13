@@ -240,7 +240,7 @@ r_tainted_str_new(const char *str, long len) {
 
     if (str) {
         val = rb_enc_str_new(str, len, rb_utf8_encoding());
-        OBJ_TAINT(str);
+        OBJ_TAINT(val);
     } else {
         val = Qnil;
     }
