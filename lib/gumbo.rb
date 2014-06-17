@@ -14,4 +14,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 require 'gumbo_ext'
+require 'gumbo/element'
 require 'gumbo/node'
+require 'gumbo/text'

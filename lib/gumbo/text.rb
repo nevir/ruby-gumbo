@@ -14,30 +14,16 @@
 
 require 'gumbo'
 
-class Gumbo::Node
-  # Recursively dump an indented representation of a HTML tree to +output+.
-  # Text nodes are not printed.
-  def dump_tree(output = $stdout)
-    process_node = lambda do |node, indent|
-      return unless node.type == :document || node.type == :element
+class Gumbo::Text
+  def to_s
+    original_text
+  end
+  alias_method :inspect, :to_s
 
-      output.write (" " * indent)
-
-      if node.type == :element
-        tag = (node.tag == :unknown) ? node.original_tag_name : node.tag.to_s
-        attributes = node.attributes.map(&:name)
-        output.write "<" + tag.upcase()
-        output.write(" " + attributes.join(" ")) unless attributes.empty?
-        output.puts ">"
-
-        indent += 2
-      end
-
-      for child in node.children
-        process_node.call(child, indent)
-      end
-    end
-
-    process_node.call(self, 0)
+  # The *byte* offset range where this node was extracted from, or nil if it
+  # was inserted algorithmically.
+  def offset_range
+    return nil unless original_text
+    start_pos.offset...(start_pos.offset + original_text.bytesize)
   end
 end
