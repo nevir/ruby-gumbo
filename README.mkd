@@ -1,48 +1,6 @@
 # ruby-gumbo
 
-## Description
+I did not have enough free time to support `ruby-gumbo`, so Ian MacLeod
+(<https://github.com/nevir>) is now the lead developer.
 
-`ruby-gumbo` is a ruby binding for the Gumbo HTML5 parser.
-
-## Installation
-
-`ruby-gumbo` can be directly installed from http://rubygems.org:
-
-    gem install ruby-gumbo
-
-Or you can create the gem with `rake package`, then install it with `gem
-install` (the gem file is in the `pkg` directory).
-
-## Example
-
-```ruby
-require 'net/http'
-
-html = Net::HTTP.get URI.parse('http://example.org')
-Gumbo::parse(html) {|doc| doc.dump_tree}
-```
-
-Result:
-
-```
-<HTML>
-  <HEAD>
-    <TITLE>
-    <META charset>
-    <META http-equiv content>
-    <META name content>
-    <STYLE type>
-  <BODY>
-    <DIV>
-      <H1>
-      <P>
-      <P>
-        <A href>
-```
-
-You can find more examples in the `examples` directory.
-
-## Contact
-
-If you have found a bug, have an idea or a question, email me at
-<khaelin@gmail.com>.
+The new official repository is <https://github.com/nevir/ruby-gumbo>.
