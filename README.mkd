@@ -1,6 +1,45 @@
 # ruby-gumbo
 
-I did not have enough free time to support `ruby-gumbo`, so Ian MacLeod
-(<https://github.com/nevir>) is now the lead developer.
+Ruby bindings for Google's [Gumbo][gumbo] HTML5
+parser.
 
-The new official repository is <https://github.com/nevir/ruby-gumbo>.
+
+## Getting Started
+
+Stick it in your `Gemfile`!
+
+```ruby
+gem 'ruby-gumbo', '~> 1.1'
+```
+
+And then parse away:
+
+```ruby
+require 'gumbo'
+doc = Gumbo::parse(html)
+```
+
+You'll probably want to peruse the [documentation][docs] to see how to navigate
+a document and its nodes.
+
+
+## Developing
+
+Grab the repository, and make sure to include submodules:
+
+```
+git checkout https://github.com/nevir/ruby-gumbo --recursive
+```
+
+And from there you should be able to `rake build` and `gem install pkg/*.gem`.
+
+
+## License
+
+ruby-gumbo is licensed under the [ISC license](LICENSE), and packages the
+[gumbo-parser library][gumbo] (APACHE v2.0).
+
+This is not a Google product and is not supported by Google in any way.
+
+[gumbo]: https://github.com/google/gumbo-parser
+[docs]: http://rubydoc.info/github/nevir/ruby-gumbo/master/frames

@@ -1,13 +1,10 @@
-/ext/*.bundle
-/ext/*.o
-/ext/*.so
-/ext/tmp/
-
-/ext/Makefile
-/ext/extconf.h
-/ext/mkmf.log
+/ext/*
+!/ext/extconf.rb
+!/ext/ruby_gumbo*.[ch]
 
 /pkg
 /ports
 
 session.vim
+
+Gemfile.lock

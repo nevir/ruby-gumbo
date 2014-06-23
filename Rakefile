@@ -1,90 +1,80 @@
-
 require 'rake/clean'
-
-require 'rdoc/task'
-
 require 'rubygems/package_task'
+require 'yard'
 
+VERSION = '1.1.0'
 
-PKG_NAME = "ruby-gumbo"
-PKG_VERSION = "1.0.2"
+BUILT_EXTENSION = "ext/gumbo_ext.#{RbConfig::CONFIG['DLEXT']}"
+BUILT_FILES = FileList[
+  BUILT_EXTENSION,
+]
+EXTENSION_SOURCE_FILES = FileList[
+  'ext/extconf.rb',
+  'ext/ruby_gumbo*.{h,c}',
+]
+SOURCE_FILES = FileList[
+  'Rakefile',
+  'LICENSE',
+  'README.mkd',
+  'lib/**/*.rb',
+  *EXTENSION_SOURCE_FILES,
+]
+VENDOR_FILES = FileList[
+  'vendor/gumbo-parser/src/*',
+]
+PACKAGED_FILES = FileList[
+  *BUILT_EXTENSION,
+  *SOURCE_FILES,
+  *VENDOR_FILES
+]
 
-EXT_CONF = "ext/extconf.rb"
-MAKEFILE = "ext/Makefile"
-MODULE = "ext/gumbo.so"
-SRC = Dir.glob("ext/*.c") << MAKEFILE
+# Building
 
-CLEAN.include [MODULE, "ext/*.o", "ext/tmp", "ports"]
-CLOBBER.include ["ext/mkmf.log", "ext/extconf.h", MAKEFILE]
+task :build => BUILT_EXTENSION
 
-# Build
-file MAKEFILE => EXT_CONF do |t|
-  Dir::chdir(File::dirname(EXT_CONF)) do
-    unless sh "ruby #{File::basename(EXT_CONF)}"
-      $stderr.puts "extconf.rb failed"
-      break
-    end
+# Note that this will fail to pick up new files; you'll want to rake clean
+# after adding/remove files. (The trade off is that versus rebuilding the
+# Makefile each time an extension source file is touched).
+file 'ext/Makefile' => ['ext/extconf.rb'] + VENDOR_FILES do
+  Dir.chdir 'ext' do
+    ruby 'extconf.rb'
   end
 end
 
-file MODULE => SRC do |t|
-  Dir::chdir(File::dirname(EXT_CONF)) do
-    unless sh "make"
-      $stderr.puts "make failed"
-      break
-    end
+file BUILT_EXTENSION => ['ext/Makefile'] + EXTENSION_SOURCE_FILES do
+  Dir.chdir 'ext' do
+    sh 'make'
   end
 end
-
-desc "Check for dependencies"
-task :check do
-  begin
-    require "mini_portile"
-  rescue LoadError
-    abort "mini_portile is missing: gem install mini_portile"
-  end
-end
-
-desc "Build the native library"
-task :build => [:check, MODULE]
 
 # Documentation
-RDOC_FILES = FileList["ext/gumbo.c", "lib/gumbo/extra.rb"]
 
-Rake::RDocTask.new do |task|
-  #task.main = "README.rdoc"
-  task.rdoc_dir = "doc/api"
-  task.rdoc_files.include(RDOC_FILES)
-end
-
-Rake::RDocTask.new(:ri) do |task|
-  #task.main = "README.rdoc"
-  task.rdoc_dir = "doc/ri"
-  task.options << "--ri-system"
-  task.rdoc_files.include(RDOC_FILES)
-end
+YARD::Rake::YardocTask.new(:doc)
 
 # Packaging
-PKG_FILES = FileList["Rakefile", "LICENSE", "README.mkd",
-                     "lib/**/*.rb",
-                     "ext/extconf.rb", "ext/*.[hc]"]
 
 SPEC = Gem::Specification.new do |spec|
-    spec.name = PKG_NAME
-    spec.version = PKG_VERSION
-    spec.summary = "Ruby bindings for the gumbo html5 parser"
-    spec.author = "Nicolas Martyanoff"
-    spec.email = "khaelin@gmail.com"
-    spec.license = "ISC"
+    spec.name    = 'ruby-gumbo'
+    spec.version = VERSION
+    spec.summary = 'Ruby bindings for the gumbo html5 parser'
+    spec.authors = ['Nicolas Martyanoff', 'Ian MacLeod']
+    spec.email   = ['khaelin@gmail.com', 'ian@nevir.net']
+    spec.license = 'ISC'
 
-    spec.files = PKG_FILES
-    spec.extensions = "ext/extconf.rb"
+    spec.files      = SOURCE_FILES + VENDOR_FILES
+    spec.extensions = 'ext/extconf.rb'
 
-    spec.required_ruby_version = ">= 1.9.3"
-
-    spec.add_runtime_dependency 'mini_portile', '~> 0.6'
+    spec.required_ruby_version = '>= 1.9.3'
 end
 
 Gem::PackageTask.new(SPEC) do |pkg|
-    pkg.need_tar = true
+  pkg.need_tar = true
+  pkg.need_zip = true
 end
+
+# Cleaning
+
+CLEAN.include('ext/**/*', '.yardoc')
+CLEAN.exclude(*SOURCE_FILES, *BUILT_FILES)
+
+CLOBBER.include('doc', *BUILT_FILES)

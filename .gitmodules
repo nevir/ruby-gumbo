@@ -1,0 +1,4 @@
+[submodule "vendor/gumbo-parser"]
+	path = vendor/gumbo-parser
+	url = https://github.com/google/gumbo-parser
+	branch = master

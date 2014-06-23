@@ -1,57 +1,23 @@
-require "mkmf"
+require 'mkmf'
 
-EXTENSION_NAME = "gumbo_ext"
-USE_SYSTEM_LIBS = arg_config('--use-system-libraries', ENV['RUBY_GUMBO_USE_SYSTEM_LIBRARIES'])
-LIBGUMBO_PACKAGE = "https://github.com/google/gumbo-parser/archive/3a61e9ad963cacfb3246468feab28c5058f621c1.zip"
-LIBGUMBO_PACKAGE_VERSION = "1.0-2014-05-03-3a61e9"
+$CFLAGS << ' -std=c99'
 
-RbConfig::MAKEFILE_CONFIG["CC"] = ENV["CC"] if ENV["CC"]
-$CFLAGS << " -std=c99"
-
-if USE_SYSTEM_LIBS
-  unless pkg_config("libgumbo")
-    $libs << " -lgumbo"
-  end
-else
-    message <<-end_message
-************************************************************************
-IMPORTANT!  ruby-gumbo builds and uses a packaged verison of libgumbo.
-
-If this is a concern for you and you want to use the system library
-instead, abort this installation process and reinstall ruby-gumbo as
-follows:
-
-    gem install ruby-gumbo -- --use-system-libraries
-
-Or, if you are using Bundler, tell it to use the option:
-
-    bundle config build.ruby-gumbo --use-system-libraries
-    bundle install
-************************************************************************
-end_message
-
-  require "mini_portile"
-  libgumbo = MiniPortile.new("libgumbo", LIBGUMBO_PACKAGE_VERSION)
-  libgumbo.target = File.expand_path("../../ports", __FILE__)
-  libgumbo.files = [LIBGUMBO_PACKAGE]
-
-  libgumbo.download unless libgumbo.downloaded?
-  libgumbo.extract
-  libgumbo.patch
-  libgumbo.send(:execute, "autogen", %Q(sh autogen.sh))
-  libgumbo.configure unless libgumbo.configured?
-  libgumbo.compile
-  libgumbo.install unless libgumbo.installed?
-  libgumbo.activate
-
-  pkgconfig_path = File.join(libgumbo.path, "lib", "pkgconfig")
-  ENV["PKG_CONFIG_PATH"] = "#{pkgconfig_path}:#{ENV["PKG_CONFIG_PATH"]}"
-
-  find_header("gumbo.h")
-  unless pkg_config("gumbo")
-    abort 'No package'
-  end
+unless enable_config('packaged-library')
+  pkg_config('libgumbo')
 end
 
-create_header
-create_makefile(EXTENSION_NAME)
+if enable_config('packaged-library') || !have_library('gumbo', 'gumbo_parse')
+  gumbo_lib_src = File.expand_path('../../vendor/gumbo-parser/src', __FILE__)
+  unless File.directory? gumbo_lib_src
+    abort "Couldn't find the packaged gumbo-parser library. " +
+          "Did you forget to git clone --recursive?"
+  end
+  require 'fileutils'
+
+  # mkmf doesn't appear to deal well with sources/objects in multiple
+  # directories, so we bring the gumbo source to it.
+  gumbo_sources = Dir[File.join(gumbo_lib_src, '*')]
+  FileUtils.cp(gumbo_sources, File.dirname(__FILE__))
+end
+
+create_makefile('gumbo_ext')
